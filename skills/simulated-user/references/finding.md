@@ -26,6 +26,7 @@ run with 9,000 tokens of context becomes a run with 40,000.
 | `what_i_expected` | in user words |
 | `what_happened` | what the page actually showed |
 | `screenshot` | path of the one screenshot you took at this moment (below). Omit only if the browser surface cannot take one |
+| `request` | optional: what you, the user, want the product to do instead, in one sentence. *"Let me join a course from its page."* When omitted, the issue asks for `what_i_expected` |
 
 ## The screenshot
 
@@ -96,16 +97,19 @@ labelled `suspect`.
 One issue per `confirmed` finding, labelled `bug`, plus the role, the severity,
 and `spine` when `spine: true`. The title is the finding's title, unchanged.
 
-The body is **written by the user who hit it, to the student who built it.**
-It must be actionable without reading this file.
+The body is **a request from the user who hit it, to the student who built it**:
+the same shape as any other issue a person would open, so the repository's issue
+loop picks it up without special handling. It must be actionable without reading
+this file.
 
 ```
-I'm a learner. I signed in as jane.doe@example.com and opened Available Courses.
-I wanted to join the DevOps Engineering course.
+I'm a learner. I signed in as jane.doe@example.com, then opened Available Courses.
+I was trying to enrol and take the quiz.
 
-**What I expected:** a button or link that lets me join the course.
+**What I'd like:** let me join a course from its page.
 
-**What happened:** the course page shows a title and description and nothing I can click.
+**What happened instead:** the course page shows a title and description and
+nothing I can click.
 
 **How to see it yourself**
 1. signed in as jane.doe@example.com
@@ -113,6 +117,8 @@ I wanted to join the DevOps Engineering course.
 3. clicked DevOps Engineering
 
 [screenshot]
+
+Could you fix this? Reply here if you need anything else from me.
 
 ---
 Severity `blocking`: I could not finish "enrol and take the quiz".

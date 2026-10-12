@@ -9,8 +9,10 @@ default has to be the useful one. --dry-run previews without writing.
     python3 file_gaps.py .cs4602/findings.jsonl --max 5            # tighter cap
     python3 file_gaps.py .cs4602/findings.jsonl --include-suspect  # file suspect ones too
 
-Each issue is a bug report written in the voice of the user who hit it, with the
-screenshot the role took at that moment attached (gh >= 2.99 `--attach`). Only
+Each issue is a request from the user who hit the problem, in their voice, with
+the screenshot the role took at that moment attached (gh >= 2.99 `--attach`): the
+same shape as any issue a person would open, so the repo's issue loop needs no
+special case for it. Only
 findings the verify pass marked `confirmed` (or never marked) are filed; `suspect`
 ones are printed for a human to read. Anything that is really a run artefact (a
 budget, a harness complaint) is refused here as a last line of defence.
@@ -121,16 +123,23 @@ def body(f, shot):
         opening += "."
     opening += f" I was trying to {step}."
 
+    # The ask comes first: this is a request from a user, the same shape as any
+    # issue a person would open, so the repo's issue loop needs no special case.
+    want = (f.get("request") or "").strip()
+    if not want:
+        expected = (f.get("what_i_expected") or "").strip().rstrip(".")
+        want = f"I'd like {expected}." if expected else "_(not recorded)_"
     parts = [
         opening,
-        f"**What I expected:** {f.get('what_i_expected') or '_(not recorded)_'}",
-        f"**What happened:** {f['what_happened']}",
+        f"**What I'd like:** {want}",
+        f"**What happened instead:** {f['what_happened']}",
     ]
     if did:
         steps = "\n".join(f"{i}. {s}" for i, s in enumerate(did, 1))
         parts.append(f"**How to see it yourself**\n{steps}")
     if shot:
         parts.append(f"![What I saw]({shot.as_posix()})")
+    parts.append("Could you fix this? Reply here if you need anything else from me.")
 
     sev = f.get("severity")
     tail = []

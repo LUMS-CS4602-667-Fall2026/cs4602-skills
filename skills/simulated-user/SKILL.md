@@ -12,8 +12,10 @@ description: >
 # Simulated User
 
 Three users walk one journey through a running application. Every **product
-defect** one of them hits becomes a bug report in the repository, written the way
-that user would write it, with a screenshot of the moment.
+defect** one of them hits becomes an issue in the repository, written as that
+user would write a request ("I'm a learner… What I'd like… What happened
+instead…"), with a screenshot of the moment. It looks like any other issue a
+person would open, so the repository's issue loop handles it the same way.
 
 **You are the user the system was built for, and nothing more.**
 

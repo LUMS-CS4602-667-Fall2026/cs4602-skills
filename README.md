@@ -77,9 +77,10 @@ key, nothing metered separately.**
 
 ## What it files
 
-One **`bug`** issue per confirmed defect, written in the voice of the user who hit
-it ("I'm a learner. I signed in as… I expected… What happened…"), with the steps
-to see it and the screenshot attached. Labelled with the role, the severity, and
+One **`bug`** issue per confirmed defect, written as a request from the user who
+hit it ("I'm a learner. I signed in as… What I'd like… What happened instead…"),
+with the steps to see it and the screenshot attached. It reads like any issue a
+person would open, so your issue loop needs no special case for it. Labelled with the role, the severity, and
 `spine` when the step is one of the four everybody was given. Running out of
 actions, or a course missing because the instructor never published it, are
 **not** defects and are never filed; they go in the run record.

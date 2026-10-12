@@ -1,23 +1,39 @@
 #!/usr/bin/env python3
 """Turn .cs4602/findings.jsonl into one labelled GitHub issue per finding.
 
-Dry run by default — prints what it would create and stops. Add --apply to file.
-Idempotent: an open or closed issue with the same title is skipped, so re-running
-after a fix round adds only what is new.
+FILES BY DEFAULT. These issues are the queue the factory works from, so the
+default has to be the useful one. --dry-run previews without writing.
 
-    python3 file_gaps.py .cs4602/findings.jsonl
-    python3 file_gaps.py .cs4602/findings.jsonl --apply
+    python3 file_gaps.py .cs4602/findings.jsonl              # files them
+    python3 file_gaps.py .cs4602/findings.jsonl --dry-run    # preview only
+    python3 file_gaps.py .cs4602/findings.jsonl --max 5      # tighter cap
+
+Two guards, because the default writes:
+
+  * MAX_ISSUES (default 10). Findings are triaged blocking > degraded > cosmetic,
+    spine first, and anything past the cap is held back and named. One bad run
+    cannot bury the tracker it exists to inform.
+  * An append-only ledger beside the findings file, written BEFORE each create
+    and checked before any API call.
+
+⚠️ The ledger is not belt-and-braces. GitHub's issues-list endpoint lags a few
+seconds behind a create, so a title check alone lets a fast re-run duplicate
+everything — observed 2026-10-12 on the sibling post_project_brief.py. Re-running
+after a fix round is this script's INTENDED workflow, so that path has to be safe.
 """
 
 import argparse
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 SEVERITIES = ("blocking", "degraded", "cosmetic")
 ROLES = ("administrator", "instructor", "learner")
 TITLE_PREFIX = "[gap]"
+MAX_ISSUES = 10
+LEDGER_NAME = "filed.jsonl"
 
 
 def gh(*args, check=True):
@@ -93,12 +109,69 @@ def labels_for(f):
     return out
 
 
+def ledger_path(findings):
+    """The ledger sits beside the findings file, so it travels with the run."""
+    return Path(findings).resolve().parent / LEDGER_NAME
+
+
+def already_filed(findings, repo_key):
+    """Titles this machine has already filed into this repo, from the ledger.
+
+    Checked before any API call. The issues-list endpoint is layer two, not
+    layer one, because it lags behind a create — see the module docstring.
+    """
+    lp = ledger_path(findings)
+    if not lp.exists():
+        return set()
+    done = set()
+    for line in lp.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue            # a torn last line is normal; ignore it
+        if rec.get("repo") == repo_key and rec.get("title"):
+            done.add(rec["title"])
+    return done
+
+
+def record(findings, repo_key, title, url):
+    """Append BEFORE the next create, so a crash cannot lose what we just made."""
+    with ledger_path(findings).open("a") as fh:
+        fh.write(json.dumps({"repo": repo_key, "title": title,
+                             "url": url, "ts": time.time()}) + "\n")
+
+
+def triage(queued):
+    """Worst first: blocking before cosmetic, spine before non-spine.
+
+    Only matters when the cap bites, and that is exactly when it matters most —
+    whatever gets held back should be the stuff nobody would have read anyway.
+    """
+    sev_rank = {s: i for i, s in enumerate(SEVERITIES)}
+    return sorted(
+        queued,
+        key=lambda tf: (sev_rank.get(tf[1].get("severity"), len(SEVERITIES)),
+                        0 if tf[1].get("spine") else 1,
+                        tf[0]),
+    )
+
+
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(
+        description="File simulated-user findings as GitHub issues. Writes by default.")
     ap.add_argument("findings", help="path to findings.jsonl")
-    ap.add_argument("--apply", action="store_true", help="actually create the issues")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="preview only; make no issues and no labels")
+    ap.add_argument("--max", type=int, default=MAX_ISSUES, metavar="N",
+                    help=f"most issues to create in one run (default {MAX_ISSUES})")
     ap.add_argument("--repo", help="owner/name; defaults to the current repo")
     args = ap.parse_args()
+    apply = not args.dry_run
+    if args.max < 1:
+        sys.exit("--max must be at least 1")
 
     path = Path(args.findings)
     if not path.exists():
@@ -118,9 +191,17 @@ def main():
         return
 
     repo = ["--repo", args.repo] if args.repo else []
+    repo_key = args.repo or gh("repo", "view", "--json", "nameWithOwner",
+                               "--jq", ".nameWithOwner").strip() or "(unknown)"
+    print(f"repo:  {repo_key}")
 
-    # One listing, not one lookup per finding: these runs are small but the stage is
-    # 28 minutes long and 107 people are doing it at once against the same API.
+    # Layer 1: the ledger. No API call, and authoritative for what we filed.
+    filed = already_filed(args.findings, repo_key)
+    if filed:
+        print(f"ledger: {len(filed)} already filed into this repo from here")
+
+    # Layer 2: the repo's own issues, for anything filed from somewhere else.
+    # One listing, not one lookup per finding — 107 people hit this at once.
     existing = {
         i["title"]
         for i in json.loads(
@@ -132,13 +213,20 @@ def main():
     seen, queued = set(), []
     for f in findings:
         title = f"{TITLE_PREFIX} {f['title']}".strip()
+        if title in filed:
+            print(f"  skip   {title}   (ledger)")
+            continue
         if title in existing or title in seen:
-            print(f"  skip   {title}   (already filed)")
+            print(f"  skip   {title}   (already in the tracker)")
             continue
         seen.add(title)
         queued.append((title, f))
 
-    if args.apply:
+    queued = triage(queued)
+    held = queued[args.max:]
+    queued = queued[:args.max]
+
+    if apply and queued:
         # --force so a re-run does not fail on labels that already exist.
         for name, colour, desc in [
             ("gap", "B60205", "Something the simulated user could not do"),
@@ -152,18 +240,29 @@ def main():
 
     for title, f in queued:
         labs = labels_for(f)
-        if not args.apply:
+        if not apply:
             print(f"  would  {title}   [{', '.join(labs)}]")
             continue
         url = gh("issue", "create", "--title", title, "--body", body(f),
                  "--label", ",".join(labs), *repo).strip()
+        record(args.findings, repo_key, title, url)
         print(f"  filed  {url}  {title}")
 
-    spine = sum(1 for _, f in queued if f.get("spine"))
-    print(f"\n{len(queued)} to file, {len(findings) - len(queued)} already there.")
-    print(f"⭐ {spine} of {len(queued)} are inside the spine — that is the number to report.")
-    if not args.apply:
-        print("DRY RUN — add --apply to create the issues.")
+    verb = "filed" if apply else "to file"
+    print(f"\n{len(queued)} {verb}, {len(findings) - len(queued) - len(held)} already there.")
+    if queued:
+        spine = sum(1 for _, f in queued if f.get("spine"))
+        print(f"⭐ {spine} of {len(queued)} are inside the spine — that is the number to report.")
+
+    if held:
+        print(f"\n⚠️  CAPPED AT {args.max}. {len(held)} finding(s) held back, worst-last order:")
+        for title, f in held:
+            print(f"     - [{f.get('severity', '?')}] {title}")
+        print("     Fix what was filed, re-run, and these come through — the ledger")
+        print(f"     stops the filed ones repeating. Or raise it: --max {len(held) + args.max}.")
+
+    if not apply:
+        print("\nDRY RUN — nothing was created. Drop --dry-run to file.")
 
 
 if __name__ == "__main__":

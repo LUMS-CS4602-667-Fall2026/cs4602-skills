@@ -6,6 +6,11 @@ Skills for **CS4602 / CS667 — Coding for Careers**, LUMS, Fall 2026.
 |---|---|
 | [`simulated-user`](skills/simulated-user/SKILL.md) | Three users walk one fixed journey through your running application. Everything they could not do becomes an issue in your repo |
 
+> ⚠️ **It creates GitHub issues in the repo you run it in.** That is the point —
+> the issues are the queue the work gets done from — but know it before you run
+> it. At most **10 per run**, worst first, and a ledger stops a re-run
+> duplicating them. `--dry-run` on `file_gaps.py` previews without writing.
+
 ## Install
 
 **Any harness** — clone it beside your project and point your agent at it:
@@ -82,3 +87,7 @@ bugs and wrong when the output lands in a real issue tracker. **Here, finishing
 the journey cleanly is a result**, and an invented finding is worse than none.
 
 MIT. Issues and pull requests welcome from the cohort.
+
+> **Published at** https://github.com/LUMS-CS4602-667-Fall2026/cs4602-skills —
+> this directory in the course repo is the source; that repo is the mirror
+> students clone. Edit here, then push the mirror.

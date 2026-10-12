@@ -112,8 +112,15 @@ Back in the main conversation, with only the findings file:
    `confirmed` when the trail supports the claim, `suspect` when the trail
    contradicts it or the claim cannot be checked from the evidence.
    **Suspect findings are kept and labelled, never deleted.**
-2. `python3 scripts/file_gaps.py .cs4602/findings.jsonl` to preview, then
-   `--apply` to open one issue per finding, labelled `gap`.
+2. `python3 scripts/file_gaps.py .cs4602/findings.jsonl` — **this files the
+   issues.** They are the queue the factory works from, so writing is the
+   default. `--dry-run` previews; `--max N` tightens the cap.
+   - **At most 10 issues per run.** Findings are triaged `blocking` →
+     `degraded` → `cosmetic`, spine first, and anything past the cap is named
+     rather than dropped. Fix what was filed, re-run, and the rest come through.
+   - A ledger beside the findings file stops a re-run duplicating what it
+     already filed. ⚠️ **Do not delete it** to "start fresh" — you will get two
+     of everything.
 3. Report two counts: **how many gaps, and how many fall inside the spine** —
    the three roles and the four steps everybody was given. A gap in the spine is
    a requirement that was read and dropped.
@@ -128,3 +135,4 @@ Back in the main conversation, with only the findings file:
 | Past 10 actions on one role | Stop and record `gave_up`. The budget is the persona |
 | Filing a finding you cannot describe in "I did X, I expected Y, I got Z" | It is not a finding yet |
 | Reporting success without a `findings.jsonl` on disk | Nothing ran. Say so |
+| About to file more than 10 issues | The cap already stopped you. File the worst 10, not all 30 |

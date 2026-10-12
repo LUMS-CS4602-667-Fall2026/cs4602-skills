@@ -28,8 +28,15 @@ git clone https://github.com/LUMS-CS4602-667-Fall2026/cs4602-skills .cs4602
 /plugin install simulated-user@cs4602
 ```
 
-**Read the skill before you run it.** It is three short Markdown files and two
-scripts. Knowing what it is about to do to your repository is the point, and it
+**Antigravity** — also copy the role subagent once, so the roles run on the fast
+tier in parallel:
+
+```bash
+mkdir -p .agents/agents && cp .cs4602/skills/simulated-user/agents/simulated-user-role.agent.md .agents/agents/
+```
+
+**Read the skill before you run it.** It is three short Markdown files, two
+scripts and one subagent definition. Knowing what it is about to do to your repository is the point, and it
 takes two minutes.
 
 ## What `simulated-user` needs
@@ -63,10 +70,19 @@ key, nothing metered separately.**
 
 | | |
 |---|---|
-| Model turns | ~30 total, 10 per role, hard-capped |
-| Perception | `take_snapshot` (~530 tokens of labelled page) — **never** `take_screenshot` (~1,230, and it tells you less) |
-| Wall clock | 3–5 minutes |
-| Your main context | almost nothing — each role runs in its own subagent and returns three lines |
+| Model turns | ~45 total, hard-capped at 15 counted actions per role (a whole form is one action; sign-in, sign-out and the evidence screenshot are free) |
+| Perception | `take_snapshot` (~530 tokens of labelled page) — **never** `take_screenshot` to see the page (~1,230, and it tells you less). One screenshot per defect, as evidence for the issue |
+| Wall clock | 2–4 minutes — the administrator and the instructor run at the same time, then the learner, then the instructor again |
+| Your main context | almost nothing — each role runs in its own subagent (on Antigravity, the `flash` tier) and returns three lines |
+
+## What it files
+
+One **`bug`** issue per confirmed defect, written in the voice of the user who hit
+it ("I'm a learner. I signed in as… I expected… What happened…"), with the steps
+to see it and the screenshot attached. Labelled with the role, the severity, and
+`spine` when the step is one of the four everybody was given. Running out of
+actions, or a course missing because the instructor never published it, are
+**not** defects and are never filed; they go in the run record.
 
 For comparison, [Shoal](https://github.com/Raynan00/shoal) — the swarm-of-AI-users
 tool this borrows its best ideas from — spends about **128,000 tokens per

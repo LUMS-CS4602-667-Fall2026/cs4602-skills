@@ -1,0 +1,15 @@
+{
+  "name": "cs4602",
+  "description": "Skills for CS4602 Coding for Careers, LUMS, Fall 2026.",
+  "owner": {
+    "name": "CS4602",
+    "url": "https://github.com/LUMS-CS4602-667-Fall2026"
+  },
+  "plugins": [
+    {
+      "name": "simulated-user",
+      "description": "Three simulated users walk one fixed journey through a running web application and file one issue per thing they could not do",
+      "source": "./"
+    }
+  ]
+}

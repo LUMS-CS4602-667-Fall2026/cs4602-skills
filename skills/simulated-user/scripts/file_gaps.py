@@ -128,7 +128,7 @@ def body(f, shot):
     want = (f.get("request") or "").strip()
     if not want:
         expected = (f.get("what_i_expected") or "").strip().rstrip(".")
-        want = f"I'd like {expected}." if expected else "_(not recorded)_"
+        want = f"{expected}." if expected else "_(not recorded)_"
     parts = [
         opening,
         f"**What I'd like:** {want}",

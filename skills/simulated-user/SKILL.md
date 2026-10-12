@@ -67,32 +67,46 @@ more than fifteen actions for one step, that is a `degraded` defect described in
 product terms ("Publishing a course takes nine clicks across three screens"), not
 a sentence about a budget.
 
-## 3 — Run the roles: two in parallel, then two in sequence
+## 3 — Run the roles: one subagent each, one after another
 
 Read [`references/journey.md`](references/journey.md) for the roles, the four
-steps and the hand-off between them. Steps 1 and 2 are independent, so they run
-at the same time. Steps 3 and 4 depend on what came before.
+steps and the hand-off between them.
 
 ```
-Phase A   administrator (step 1)  ║  instructor (step 2)      ← two subagents, concurrently
-Phase B   learner (step 3)                                     ← one subagent, briefed with A's output
-Phase C   instructor (step 4)                                  ← one short subagent, briefed with B's output
+Phase A   administrator (step 1)     ← one subagent
+Phase B   instructor (step 2)        ← one subagent
+Phase C   learner (step 3)           ← one subagent, briefed with A's and B's output
+Phase D   instructor (step 4)        ← one short subagent, briefed with C's output
 ```
+
+⚠️ **Roles run one at a time, even though steps 1 and 2 are independent.** All
+roles share one browser, and the app's sign-in is a cookie on that browser: two
+roles at once means the administrator's tab silently becomes the instructor
+half-way through, and every finding after that is noise. Run them concurrently
+only when each role has its **own browser profile** (a second `chrome-devtools`
+MCP server started with `--isolated`), and say so in the report.
 
 Dispatch each role as a **background subagent** and give it only: the app URL,
 its role, its step, the hand-off facts it needs (below), and the path of this
-skill. Do not wait inside the subagent call; wait for the phase to finish, read
-`.cs4602/run.jsonl`, then start the next phase.
+skill. Do not wait inside the subagent call; wait for it to finish, read
+`.cs4602/run.jsonl`, then start the next one. Each role **signs out** as its last
+free action, so the next one starts clean.
 
 | Harness | How to dispatch |
 |---|---|
-| **Antigravity** | Copy [`agents/simulated-user-role.agent.md`](agents/simulated-user-role.agent.md) to `.agents/agents/` once. Then `invoke_subagent` with `simulated-user-role`, one per role, Phase A's two in the same turn. It runs on the `flash` tier: a user clicking buttons does not need deep reasoning |
-| **Claude Code** | `Agent` tool, one per role, Phase A's two in one message. Use the fastest model available (Haiku) |
+| **Antigravity** | Copy [`agents/simulated-user-role.agent.md`](agents/simulated-user-role.agent.md) to `.agents/agents/` once. Then `invoke_subagent` with `simulated-user-role`, one per role. It runs on the `flash` tier: a user clicking buttons does not need deep reasoning |
+| **Claude Code** | `Agent` tool, one per role. Use the fastest model available (Haiku) |
 | **Cursor** | One background agent per role, same brief |
+
+Where the time goes, and what this design saves: the roles' browser transcripts
+stay out of the main conversation, a form is one action instead of one per
+field, sign-in is free, and the role model is the fast tier.
 
 ### Hand-off between phases
 
-Each role appends **one line** to `.cs4602/run.jsonl` when it finishes:
+Each role appends **one line** to `.cs4602/run.jsonl` when it finishes. Append
+with a shell command (`echo '<json>' >> .cs4602/run.jsonl`), never with a
+write-file tool, which would replace the file:
 
 ```json
 {"role":"administrator","status":"completed","actions":4,"created":{"learner_email":"jane.doe@example.com","learner_password":"Welcome1!"}}
@@ -191,7 +205,7 @@ Back in the main conversation, with only `findings.jsonl` and `run.jsonl`:
 | If you catch yourself… | Then |
 |---|---|
 | Running the roles in the main conversation | Stop. Dispatch subagents; the transcripts do not belong here |
-| Running administrator and instructor one after the other | They are independent. Start both, then wait |
+| Starting two roles at once in one browser | They share the sign-in cookie. One at a time, unless each has its own browser profile |
 | Filling a form one field per turn | `fill_form` takes every field at once. That is one action |
 | Taking a screenshot to see the page | Don't. Read it as text. A screenshot is evidence of a defect, nothing else |
 | Writing "budget exhausted" as a finding | It is not one. Record `gave_up` and move on |

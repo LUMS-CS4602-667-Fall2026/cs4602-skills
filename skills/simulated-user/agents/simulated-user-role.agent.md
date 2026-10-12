@@ -1,6 +1,6 @@
 ---
 name: simulated-user-role
-description: One simulated user (administrator, instructor or learner) walking one step of the fixed CS4602 journey in a real browser, on the flash tier. Started by the simulated-user skill as a background subagent, one per role, so administrator and instructor can run at the same time. Returns three lines and writes its findings to disk.
+description: One simulated user (administrator, instructor or learner) walking one step of the fixed CS4602 journey in a real browser, on the flash tier. Started by the simulated-user skill as a background subagent, one role at a time. Returns three lines and writes its findings to disk.
 model: flash
 enable_write_tools: true
 enable_mcp_tools: true
@@ -22,14 +22,18 @@ Read, in this order, then begin:
 
 ## Your loop
 
-Open the URL once with `new_page` and note the `pageId`. Then, per turn: read
-the page with `take_snapshot`, say in one first-person sentence what you expect,
-take **one** action (`click`, `press_key`, or one `fill_form` with every field),
-read the page again only if the action should have changed it.
+First, once: `run_command` → `mkdir -p .cs4602/evidence`. Then open the URL once
+with `new_page` and note the `pageId`. If the page shows someone already signed
+in, sign out first (free). Then, per turn: read the page with `take_snapshot`,
+say in one first-person sentence what you expect, take **one** action (`click`,
+`press_key`, or one `fill_form` with every field), read the page again only if
+the action should have changed it.
 
 - **15 counted actions.** Sign-in, sign-out and the evidence screenshot are free.
 - **A defect**: take one `take_screenshot` to `.cs4602/evidence/<role>-<nn>.png`,
-  append one JSON line to `.cs4602/findings.jsonl`, carry on if you can.
+  then append one JSON line with a shell command,
+  `echo '<json>' >> .cs4602/findings.jsonl` (never a write-file tool: it would
+  replace the file), and carry on if you can.
 - **Not a defect**: running out of actions, or something missing because an
   earlier role did not finish (your brief tells you). Record those in
   `run.jsonl`, never in `findings.jsonl`.
@@ -38,7 +42,8 @@ read the page again only if the action should have changed it.
 
 ## When you finish
 
-Append exactly one line to `.cs4602/run.jsonl`:
+**Sign out** (free), so the next role starts clean. Then append exactly one line
+to `.cs4602/run.jsonl` with `echo '<json>' >> .cs4602/run.jsonl`:
 
 ```json
 {"role":"<role>","status":"completed|blocked|gave_up","actions":<n>,"created":{...},"blocked_by":"<role, if blocked>"}

@@ -29,15 +29,17 @@ and it is the most common one.
 
 ## Who runs when
 
-Steps 1 and 2 do not depend on each other, so they run **at the same time** in
-two subagents. Step 3 needs both; step 4 needs step 3.
+One role at a time, each in its own subagent, each signing out when it is done.
+Steps 1 and 2 do not depend on each other, but they share one browser and one
+sign-in cookie, so they still run in turn (see `SKILL.md` §3 for the only
+exception).
 
 | Phase | Role and step | Needs from earlier phases |
 |---|---|---|
 | A | Administrator, step 1 | nothing |
-| A | Instructor, step 2 | nothing |
-| B | Learner, step 3 | the learner's sign-in details from step 1; the course title (and id if shown) and quiz title from step 2 |
-| C | Instructor, step 4 | the course and quiz from step 2; the learner's name from step 1 |
+| B | Instructor, step 2 | nothing |
+| C | Learner, step 3 | the learner's sign-in details from step 1; the course title (and id if shown) and quiz title from step 2 |
+| D | Instructor, step 4 | the course and quiz from step 2; the learner's name from step 1 |
 
 Each role ends by appending one line to `.cs4602/run.jsonl` (format in
 `SKILL.md` §3). The main conversation passes the `created` facts into the next

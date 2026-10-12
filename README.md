@@ -72,7 +72,7 @@ key, nothing metered separately.**
 |---|---|
 | Model turns | ~45 total, hard-capped at 15 counted actions per role (a whole form is one action; sign-in, sign-out and the evidence screenshot are free) |
 | Perception | `take_snapshot` (~530 tokens of labelled page) — **never** `take_screenshot` to see the page (~1,230, and it tells you less). One screenshot per defect, as evidence for the issue |
-| Wall clock | 2–4 minutes — the administrator and the instructor run at the same time, then the learner, then the instructor again |
+| Wall clock | 3–5 minutes — four role runs in turn (they share one browser and its sign-in cookie), each on the fast tier with whole forms as one action |
 | Your main context | almost nothing — each role runs in its own subagent (on Antigravity, the `flash` tier) and returns three lines |
 
 ## What it files

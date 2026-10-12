@@ -77,13 +77,20 @@ Then continue the step. Do not stop, and do not quietly run all four steps as
 one user without saying so. Role separation is in the spine, so its absence is
 the single most valuable thing you can report.
 
+## What "done" means
+
+A step is done when its checks in [`checks.md`](checks.md) are ticked and its
+probes run, not when the form saved. The checks are what a careful user would
+look at anyway: is the thing I made there, with the words I typed; did the
+screen tell me; do I know what happens next; is the number right.
+
 ## Where to stop
 
-- **Fifteen counted actions per role**, then record `gave_up` with the count. A
-  whole form is one action; sign-in, sign-out and the evidence screenshot are
-  free. Four steps in fifteen actions is still tight on purpose; a product that
-  needs more than that to publish one course is itself worth a `degraded`
-  finding, written in product terms.
+- **Twenty counted actions per role**, then record `gave_up` with the count. A
+  whole form is one action; sign-in, sign-out, the phone-width read and the
+  evidence screenshot are free. The checks and probes fit in about twelve; a
+  product that needs more than twenty to publish one course is itself worth a
+  `degraded` finding, written in product terms.
 - **Do not explore.** No wandering, no clicking things that are not on the path.
   The step is the whole scope.
 - **Do not fix anything.** You are a user. Users do not patch the product.

@@ -53,7 +53,7 @@ If you have none of the three, say so in one line and stop.
 
 | | |
 |---|---|
-| Actions per role | **15 counted actions.** At the fifteenth, stop and record `gave_up` |
+| Actions per role | **20 counted actions.** At the twentieth, stop and record `gave_up` |
 | What counts | One click, one key press, or **one whole form** (`fill_form` with every field at once is one action, not one per field) |
 | What is free | Opening the app, signing in, signing out, and the one screenshot you take when you hit a defect. Those are the cost of being three people in one browser, not the product's fault |
 | Page reads | One `take_snapshot` per action, and only when the action should have changed the page. Never re-read a page nothing happened to |
@@ -63,7 +63,7 @@ If you have none of the three, say so in one line and stop.
 
 **Running out of budget is never a finding.** It goes in the run record as
 `gave_up` with the count, and the report says so. If the product genuinely needs
-more than fifteen actions for one step, that is a `degraded` defect described in
+more than twenty actions for one step, that is a `degraded` defect described in
 product terms ("Publishing a course takes nine clicks across three screens"), not
 a sentence about a budget.
 
@@ -109,13 +109,16 @@ with a shell command (`echo '<json>' >> .cs4602/run.jsonl`), never with a
 write-file tool, which would replace the file:
 
 ```json
-{"role":"administrator","status":"completed","actions":4,"created":{"learner_email":"jane.doe@example.com","learner_password":"Welcome1!"}}
-{"role":"instructor","status":"completed","actions":7,"created":{"course_id":"devops-engineering-2026-q4","course_title":"DevOps Engineering","quiz_title":"Foundations Quiz"}}
-{"role":"learner","status":"blocked","actions":5,"blocked_by":"instructor"}
+{"role":"administrator","status":"completed","actions":6,"findings":1,"created":{"learner_name":"Jane Doe","learner_email":"jane.doe@example.com","learner_password":null,"how_told":"the screen never showed or asked for one"}}
+{"role":"instructor","status":"completed","actions":11,"findings":2,"created":{"course_title":"DevOps Engineering","course_id":"devops-engineering-2026-q4","quiz_title":"Foundations Quiz","questions":[{"text":"What does CI stand for?","options":{"A":"Continuous Integration","B":"Code Inspection","C":"Central Index"},"correct":"A"}]}}
+{"role":"learner","status":"blocked","actions":2,"findings":0,"blocked_by":"administrator"}
 ```
 
-`status` is `completed` · `blocked` · `gave_up`. The main conversation copies the
-`created` facts into the next phase's brief, word for word.
+`status` is `completed` · `blocked` · `gave_up`. `created` holds **only what the
+product showed the role**, word for word; a password the screen never showed is
+`null`, not a guess. The main conversation copies these facts into the next
+phase's brief unchanged. The learner's brief must include the questions and
+correct answers, because check 3.4 answers one wrong on purpose.
 
 **If an upstream role did not finish, the downstream role does not look for its
 output.** A learner briefed that the course was never published records
@@ -133,7 +136,14 @@ still walks whatever it can (sign in, look around) so sign-in defects are caught
 5. **Read it back again.** Did it do what you expected?
 6. Blocked, confused, or contradicted by the product? **Take one screenshot**,
    append a finding (§5) and continue if you can, abandon the step if you cannot.
-7. At 15 counted actions, or when the step is done, append your line to
+7. **When the step looks done, it is not done.** Open
+   [`references/checks.md`](references/checks.md) and tick every check for your
+   step, then run its probes. A check you cannot tick is a finding with the
+   severity listed there. "I created the account" is not a result; "the account
+   appears with the name I typed, the screen confirmed it, and I was told how
+   the learner signs in" is.
+8. Finish with the two free end-of-role reads in `checks.md` (phone width, sign
+   out). At 20 counted actions, or when the checks are done, append your line to
    `.cs4602/run.jsonl` and return **three lines**: status, actions used, findings
    count. Nothing else comes back to the main conversation.
 
@@ -157,11 +167,14 @@ say. Do not apply knowledge a user of this product would not have.
 to solve with developer knowledge.** An agent clever enough to work around a
 missing feature reports a working system, which is worse than useless.
 
-### Completing cleanly is a real result
+### Completing cleanly is a real result, once every check is ticked
 
-**If a role finishes its step without friction, say so and file nothing.** Do not
-go looking for something to report. A quiet run is evidence; an invented finding
-is noise in someone's issue tracker.
+**If a role ticks every check in `checks.md`, survives the probes, and files
+nothing, say so.** That is a real result. What is not a result is a role that
+stopped at "it saved" without looking: a quiet run with the checks skipped is a
+run that did not happen. And the opposite failure still holds: do not invent a
+finding to have something to report. Every finding must fail a named check or a
+probe, in "I did X, I expected Y, I got Z" form.
 
 ## 5 — Findings are bug reports, written by the user who hit them
 
@@ -209,6 +222,9 @@ Back in the main conversation, with only `findings.jsonl` and `run.jsonl`:
 | Filling a form one field per turn | `fill_form` takes every field at once. That is one action |
 | Taking a screenshot to see the page | Don't. Read it as text. A screenshot is evidence of a defect, nothing else |
 | Writing "budget exhausted" as a finding | It is not one. Record `gave_up` and move on |
+| Recording `completed` the moment the form saved | Open `checks.md`. Tick every check for the step, run the probes, then record |
+| Briefing the learner with a password the administrator was never shown | That is inside knowledge. `learner_password: null`; the failed sign-in is the administrator's finding |
+| Answering every quiz question correctly | Check 3.4 answers one wrong on purpose. A perfect score proves nothing about the arithmetic |
 | A learner reporting the course is missing when the instructor recorded `gave_up` | That is a consequence, not a defect. `blocked_by: instructor` |
 | Tempted to `curl` the page instead | That is not a user. Stop and report the missing browser |
 | Opening a source file to find the route | Stop. You have just stopped being a user |

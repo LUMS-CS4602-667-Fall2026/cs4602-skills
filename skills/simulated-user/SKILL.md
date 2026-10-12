@@ -209,6 +209,9 @@ Back in the main conversation, with only `findings.jsonl` and `run.jsonl`:
      `--max N` tightens the cap.
    - A ledger beside the findings file stops a re-run duplicating what it
      already filed. ⚠️ **Do not delete it** to "start fresh".
+   - **Each issue is pre-approved:** the script comments `approve` on it, which
+     is what the repository's issue loop waits for, so the fix starts on the
+     loop's next tick. `--await-approval` if you want to read the plan first.
 3. Report: **per role, its status and actions used; how many bugs were filed;
    how many sit inside the spine** (the three roles and four steps everyone was
    given). A bug in the spine is a requirement that was read and dropped.

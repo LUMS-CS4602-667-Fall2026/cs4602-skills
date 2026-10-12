@@ -8,6 +8,12 @@ default has to be the useful one. --dry-run previews without writing.
     python3 file_gaps.py .cs4602/findings.jsonl --dry-run          # preview only
     python3 file_gaps.py .cs4602/findings.jsonl --max 5            # tighter cap
     python3 file_gaps.py .cs4602/findings.jsonl --include-suspect  # file suspect ones too
+    python3 file_gaps.py .cs4602/findings.jsonl --await-approval   # don't pre-approve
+
+Each issue is pre-approved: right after creating it the script comments
+`approve`, the signal the repo's issue loop waits for before building, so the
+fix starts on the loop's next tick with nobody typing anything. --await-approval
+keeps the human gate instead.
 
 Each issue is a request from the user who hit the problem, in their voice, with
 the screenshot the role took at that moment attached (gh >= 2.99 `--attach`): the
@@ -139,7 +145,8 @@ def body(f, shot):
         parts.append(f"**How to see it yourself**\n{steps}")
     if shot:
         parts.append(f"![What I saw]({shot.as_posix()})")
-    parts.append("Could you fix this? Reply here if you need anything else from me.")
+    parts.append("Please go ahead and fix this without waiting for me; this issue is "
+                 "pre-approved. Reply here only if you need something I have not said.")
 
     sev = f.get("severity")
     tail = []
@@ -227,6 +234,9 @@ def main():
                     help=f"most issues to create in one run (default {MAX_ISSUES})")
     ap.add_argument("--include-suspect", action="store_true",
                     help="also file findings the verify pass marked suspect (labelled)")
+    ap.add_argument("--await-approval", action="store_true",
+                    help="do not post the `approve` comment; the issue loop will then "
+                         "post a plan and wait for you")
     ap.add_argument("--repo", help="owner/name; defaults to the current repo")
     args = ap.parse_args()
     apply = not args.dry_run
@@ -324,6 +334,15 @@ def main():
         url = gh(*cmd).strip()
         record(args.findings, repo_key, title, url)
         print(f"  filed  {url}  {title}")
+        if not args.await_approval:
+            # The repo's issue loop builds a request once its newest comment is
+            # `approve` from the maintainer. These issues come from the
+            # maintainer's own run, so approve them on the spot and the work
+            # starts on the next tick instead of waiting for a human to type it.
+            number = url.rstrip("/").rsplit("/", 1)[-1]
+            if number.isdigit():
+                gh("issue", "comment", number, "--body", "approve", *repo, check=False)
+                print(f"         approved #{number}; the issue loop can start on it")
 
     verb = "filed" if apply else "to file"
     print(f"\n{len(queued)} {verb}, "

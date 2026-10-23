@@ -1,8 +1,11 @@
 {
   "name": "simulated-user",
-  "version": "0.1.0",
-  "description": "Three simulated users walk one fixed journey through a running web application and file one issue per thing they could not do",
-  "author": { "name": "CS4602", "url": "https://github.com/LUMS-CS4602-667-Fall2026" },
+  "version": "0.2.0",
+  "description": "Three simulated users walk one fixed journey through a running web application and file one issue per thing they could not do; plus openedx-comparison, a guided reading of Open edX against your own LMS",
+  "author": {
+    "name": "CS4602",
+    "url": "https://github.com/LUMS-CS4602-667-Fall2026"
+  },
   "repository": "https://github.com/LUMS-CS4602-667-Fall2026/cs4602-skills",
   "license": "MIT"
 }

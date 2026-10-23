@@ -5,6 +5,7 @@ Skills for **CS4602 / CS667 — Coding for Careers**, LUMS, Fall 2026.
 | Skill | What it is for |
 |---|---|
 | [`simulated-user`](skills/simulated-user/SKILL.md) | Three users walk one fixed journey through your running application. Everything they could not do becomes an issue in your repo |
+| [`openedx-comparison`](skills/openedx-comparison/SKILL.md) | Map every table, role and request path in your LMS to its Open edX counterpart, read the decision records that explain why Open edX changed shape, and answer the Session 4 questions with citations from both codebases. A reading exercise: nothing in your app gets changed |
 
 > ⚠️ **It creates GitHub issues in the repo you run it in.** That is the point —
 > the issues are the queue the work gets done from — but know it before you run
@@ -20,6 +21,8 @@ git clone https://github.com/LUMS-CS4602-667-Fall2026/cs4602-skills .cs4602
 ```
 
 > *"Read `.cs4602/skills/simulated-user/SKILL.md` and follow it."*
+>
+> *"Read `.cs4602/skills/openedx-comparison/SKILL.md` and follow it."*
 
 **Claude Code** — as a plugin:
 

@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "simulated-user",
-      "description": "Three simulated users walk one fixed journey through a running web application and file one issue per thing they could not do",
+      "description": "Two skills: simulated-user (three users walk one fixed journey through a running web application and file one issue per thing they could not do) and openedx-comparison (map your LMS to Open edX and read why it changed shape)",
       "source": "./"
     }
   ]
